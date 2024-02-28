@@ -1,0 +1,164 @@
+const express = require('express');
+const app = express();
+const http = require('http');
+const ejs = require('ejs');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server);
+const mysql = require('mysql');
+const { text } = require('express');
+var fs = require('fs');
+
+const conn = mysql.createConnection({ 
+  host: '127.0.0.3',
+  port: '3306',
+  user: 'root',
+  password: '1234',
+  database: 'db',
+})
+
+conn.connect();
+
+app.set('view engine', 'ejs');
+
+// localhost:3000으로 방문 시 index.html로 라우팅
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/page.html');
+});
+
+app.get('/temp', function(req, res) {
+  fs.readFile('temp.PNG', function(error, data)  {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.end(data);
+  })
+});
+
+app.get('/humid', function(req, res) {
+  fs.readFile('humid.PNG', function(error, data)  {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.end(data);
+  })
+});
+
+app.get('/dust', function(req, res) {
+  fs.readFile('dust.PNG', function(error, data)  {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.end(data);
+  })
+});
+
+app.get('/fan', function(req, res) {
+  fs.readFile('fan.PNG', function(error, data)  {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.end(data);
+  })
+});
+
+// server는 localhost:3000
+server.listen(3000, () => {
+  console.log('listening on *:3000');
+});
+
+var data_temp;
+var data_humid;
+var data_dust;
+var fan_status;
+
+setInterval(() => {
+    
+conn.query('SELECT * from ardu limit 1', (error, result) => {
+    if(!error){
+
+        if(!error){
+          //result
+          data_temp = result[result.length-1].temp; // result.length-1 배열의 마지막 값 가져오기
+          data_humid = result[result.length-1].humid;
+          data_dust = result[result.length-1].dust;
+
+          if(data_temp >= 30 && data_humid >= 20 && data_dust >= 70){
+            fan_status = 1;
+          }
+          else
+            fan_status = 0;
+
+          conn.query('DELETE from ardu ', (error, result) => {
+            if(!error){
+            } 
+            else{
+              throw error;
+            }
+        })
+    
+
+        }
+      else{
+        throw error;
+      }
+
+}
+})
+
+
+}, 2000);
+
+io.on('connection', function(socket){ // socket이 connection 상태일때
+    
+  console.log('client connected');
+
+  socket.on("data", function(data)
+  {
+    //socket.emit('database', data);
+    socket.emit('temp', data_temp);
+    socket.emit('humid', data_humid);
+    socket.emit('dust', data_dust);
+    socket.emit('fan', fan_status);
+  });
+
+  socket.on("pan", function(num){ 
+    if(num==1){
+    conn.query('INSERT INTO fan VALUES("1")', (error, result) => {
+        if(!error){
+          socket.emit('fan', 3);
+        
+        }
+        else{
+          throw error;
+        }
+    })
+  }
+  else if(num==2){
+    conn.query('INSERT INTO fan VALUES("0")', (error, result) => {
+        if(!error){
+          socket.emit('fan', 4);
+        }
+        else{
+          throw error;
+        }
+    })
+    }
+  });
+
+socket.on("send", function(target)
+{
+    conn.query('INSERT INTO fan VALUES("2")', (error, result) => {
+        if(!error){
+          socket.emit('fan', 5);
+        
+        }
+        else{
+          throw error;
+        }
+    })
+  });
+
+  socket.on('message', (msg) =>{
+    console.log(msg);  
+  });
+  
+    socket.on('disconnect', () => {
+       // 클라이언트의 연결이 끊어졌을 때 호출됩니다.
+      console.log('server disconnected');
+    
+   });
+
+});

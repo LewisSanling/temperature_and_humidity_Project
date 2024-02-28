@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+    label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+[type="checkbox"] {
+  appearance: none;
+}
+
+[type="checkbox"] {
+  appearance: none;
+  position: relative;
+  border: max(2px, 0.1em) solid gray;
+  border-radius: 1.25em;
+  width: 2.25em;
+  height: 1.25em;
+}
+
+[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  transform: scale(0.8);
+  background-color: gray;
+  transition: left 250ms linear;
+}
+</style>
+</head>
+<body>
+
+    <table border = "1">
+        <tr>
+            <td><image src="temp.PNG" width='100' height='100' style="float:left; border:1px solid black;"></td></image>
+            <td><image src="humid.PNG" width='100' height='100' style="float:left; border:1px solid black;"></td></image>
+            <td><image src="dust.PNG" width='100' height='100' style="float:left; border:1px solid black;"></td></image>
+        </tr>
+        <tr align='center'>
+            <td><div id = 'img_temp'>온도</td></div>
+            <td><div id = 'img_humid'>습도</div></td>
+            <td><div id = 'img_dust'>미세먼지</div></td>
+        </tr>
+        </table>
+        <label>
+            <input role="switch" type="checkbox" />
+            <span>알람</span>
+          </label>
+</body>
+</html>

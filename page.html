@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="UTF-8">  
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>온습도 측정</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <style>
+    </style>
+</head>
+<body>
+    
+
+<h1>온습도 및 미세먼지</h1>
+
+    <table id="test">
+        <tr>
+            <td><img src="/temp" width='200' height='200' style="float:left; border:1px solid black;"></img></td>
+            <td><img src="/humid" width='200' height='200' style="float:left; border:1px solid black;"></img></td>
+            <td><img src="/dust" width='200' height='200' style="float:left; border:1px solid black;"></img></td>
+            <td><img src="/fan" width='200' height='200' style= "float:left; border:1px solid black;"></img></td>
+        </tr>
+        <tr align='center'>
+            <td><div id = 'img_temp'>온도</td></div>
+            <td><div id = 'img_humid'>습도</div></td>
+            <td><div id = 'img_dust'>미세먼지</div></td>
+            <td><div id = "fan">0</div></td>
+        
+        </tr>
+        </table>
+
+        <div>
+            <button id="btn_on">팬 켜기</button>
+            <button id="btn_off">팬 끄기</button>
+            <button id="auto" disabled='disabled' >자동 모드</button>
+        </div>          
+
+        <div id='automation'>자동 모드 진행 중</div>
+
+</body>
+<script>
+
+
+btn_on.addEventListener('click', () => {
+    socket.emit("pan", 1);
+    socket.emit("fan", 3);
+    alert("쿨러가 작동합니다.");
+    const btnElement = document.getElementById('auto');
+    btnElement.innerText = '수동 모드 종료';
+    btnElement.disabled = false;
+    document.getElementById("automation").innerText = '수동 모드 진행 중';
+    });
+
+btn_off.addEventListener('click', () => {
+    socket.emit("pan", 2);
+    socket.emit("fan", 4);
+    alert("쿨러가 멈춥니다.");
+    const btnElement = document.getElementById('auto');
+    btnElement.innerText = '수동 모드 종료';
+    btnElement.disabled = false;
+    document.getElementById("automation").innerText = '수동 모드 진행 중';
+
+    });
+
+auto.addEventListener('click', () => {
+    socket.emit("send" , 1);
+    socket.emit("fan", 5);
+    alert("수동모드를 중단합니다.");
+    const btnElement = document.getElementById('auto');
+    btnElement.innerText = '자동 모드';
+    btnElement.disabled = true;
+    document.getElementById("automation").innerText = '자동 모드 진행 중';
+    });
+
+
+// socket.io 서버에 접속한다
+var socket = io.connect('http://localhost:3000/');
+
+
+setInterval(() => {
+    socket.emit("data", "요청");
+}, 1000);
+
+// 서버로부터의 메시지가 수신되면
+socket.on("temp", function(temp) {
+    console.log(temp)
+
+    var put_data = document.getElementById('img_temp');
+    put_data.innerText = temp + '%';
+
+});
+
+
+socket.on("humid", function(humid) {
+    console.log(humid)
+
+    var put_data = document.getElementById('img_humid');
+    put_data.innerText = humid + '°C' ;
+});
+
+socket.on("dust", function(dust) {
+    console.log(dust)
+
+    var put_data = document.getElementById('img_dust');
+    put_data.innerText = dust + '㎍/㎥';
+});
+
+var fan_manual;
+
+socket.on("fan", function(dust) {
+    var put_data = document.getElementById('fan');
+    if(dust==3||dust==4)
+        fan_manual=dust;
+    else if(dust==5)
+        fan_manual='';
+
+    if(fan_manual==3)
+        put_data.innerText = "ON";
+    else if(fan_manual==4)
+        put_data.innerText = "OFF";
+    
+    else{
+    if (dust == 1)
+        put_data.innerText = "ON";
+    else
+        put_data.innerText = "OFF";
+    }
+    
+        
+});
+
+</script>
+
+</html>
